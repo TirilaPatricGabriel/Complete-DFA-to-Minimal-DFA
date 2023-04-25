@@ -12,29 +12,40 @@ class Rezolvare{
     unordered_map<int, int> sets, newSets;
     string alfabet;
     unordered_map<int, unordered_map<char, int>> Map;
-    int numarStari, nSets;
+    int numarStari;
+    vector<int> stariFinale;
+    vector<string> stariFinaleNoi;
 public:
     Rezolvare();
 
-    vector<vector<int>> func(vector<vector<int>>, vector<vector<int>>);
     void start();
     void afisare();
     void creareSeturi();
     bool verificareAsemanare(int, int);
+    void cautaStariAccesibile(vector<int>&, int, unordered_map<int, bool>);
 };
+void Rezolvare::cautaStariAccesibile(vector<int>& accessible, int node, unordered_map<int, bool> seen) {
+    accessible.push_back(node);
+    for(auto [key, value] : Map[node]){
+        if(seen.find(value) == seen.end() || seen[value] == false){
+            seen[value] = true;
+            this->cautaStariAccesibile(accessible, value, seen);
+            seen[value] = false;
+        }
+    }
+}
 Rezolvare::Rezolvare(){
     this->sets = {};
     this->newSets = {};
     this->alfabet = "";
     this->Map = {};
     this->numarStari = 0;
-    this->nSets = 0;
+    this->stariFinale = {};
 }
 void Rezolvare::start(){
-    ifstream f("C:\\Users\\Patric\\CLionProjects\\DFAToMinimal\\input.txt");
+    ifstream f("C:\\Users\\tiril\\CLionProjects\\LFATema2\\input3.txt");
     int numarLitere, stare;
     char litera;
-    vector<int> stariFinale;
     f>>numarStari;
 
     bool stareFinala;
@@ -62,28 +73,19 @@ void Rezolvare::start(){
         }
     }
 
-    for(auto& c : Map[0]){
-        alfabet += c.first;
-    }
 
-    while(true){
-        bool end = 1;
-        vector<int> v = {};
-        for(auto [key, value] : Map){
-            for(auto [key2, value2] : value){
-                v.push_back(value2);
-            }
-        }
-        for(int i=0; i<numarStari; i++){
-            if(find(v.begin(), v.end(), i) == v.end()) {
-                Map.erase(i);
-                end = 0;
-            }
-        }
-        if(end) break;
-    }
+    vector<int> accessible = {};
+    unordered_map<int, bool> seen = {};
+    seen[0] = true;
+    this->cautaStariAccesibile(accessible, 0, seen);
 
-    /* ============================================================================================== */
+
+    // stergere stari inaccesibile
+    for(int i=0; i<numarStari; i++){
+        if(find(accessible.begin(), accessible.end(), i) == accessible.end()){
+            Map.erase(i);
+        }
+    }
 
     // despartim starile finale de cele nefinale
     for(auto& [key, value] : Map){
@@ -93,7 +95,6 @@ void Rezolvare::start(){
         else sets[key] = 1;
     }
 
-    nSets = 2;
     while(true){
         unordered_map<int, int> copy;
 
@@ -117,13 +118,14 @@ void Rezolvare::start(){
         }
         newSets.clear();
     }
+
     this->afisare();
 }
 void Rezolvare::afisare(){
     unordered_map<string, unordered_map<char, string>> Map2;
-    
+
     vector<vector<int>> vectorSet = {};
-    
+
     for(auto [key, value] : this->sets){
         vector<int> asemanatoare = {};
         for(auto [key2, value2] : this->sets){
@@ -132,14 +134,18 @@ void Rezolvare::afisare(){
         if(find(vectorSet.begin(), vectorSet.end(), asemanatoare) == vectorSet.end())
             vectorSet.push_back(asemanatoare);
     }
-    
+
     for(int i=0; i<vectorSet.size(); i++){
         sort(vectorSet[i].begin(), vectorSet[i].end());
         string stareNoua = "";
-        int j;
+        int j, ok = 0;
         for(j=0; j<vectorSet[i].size(); j++){
             stareNoua = stareNoua + to_string(vectorSet[i][j]);
+            if(find(this->stariFinale.begin(), this->stariFinale.end(), vectorSet[i][j]) != this->stariFinale.end()){
+                ok = 1;
+            }
         }
+        if(ok) this->stariFinaleNoi.push_back(stareNoua);
         for(auto& [tranzitie, stareAjungere] : Map[vectorSet[i][j-1]]) {
             string stareNoua2 = "";
             for(int k=0; k<vectorSet.size(); k++){
@@ -151,8 +157,17 @@ void Rezolvare::afisare(){
             Map2[stareNoua][tranzitie] = stareNoua2;
         }
     }
+    // ---
     for(auto& [key, val] : Map2){
-        cout<<"Starea "<<key<<": "<<endl;
+        if(find(stariFinaleNoi.begin(), stariFinaleNoi.end(), key) != stariFinaleNoi.end()){
+            cout<<"Starea "<<key<<"(finala): "<<endl;
+        } else {
+            cout<<"Starea "<<key;
+            if (key.find('0') != string::npos)
+                cout<<"(initiala):"<<endl;
+            else
+                cout<<":"<<endl;
+        }
         for(auto& [key2, val2] : val){
             cout<<key2<<": "<<val2<<endl;
         }
@@ -161,6 +176,10 @@ void Rezolvare::afisare(){
 
 bool Rezolvare::verificareAsemanare(int stare1, int stare2){
     int k = 0;
+    if(find(this->stariFinale.begin(), this->stariFinale.end(), stare1) !=  find(this->stariFinale.begin(), this->stariFinale.end(), stare2))
+    {
+        return false;
+    }
     for(auto [key, value] : this->Map[stare1]){
         if(value == this->Map[stare2][key] || this->sets[value] == this->sets[this->Map[stare2][key]]) // daca duc in aceeasi stare sau starile in care duc se afla in acelasi set
             k++;
@@ -172,7 +191,10 @@ bool Rezolvare::verificareAsemanare(int stare1, int stare2){
 void Rezolvare::creareSeturi(){
     for(auto [key, value] : this->sets){
         int nextKey = key+1;
-        if (nextKey < this->numarStari) {
+        while(Map.find(nextKey) == Map.end() && nextKey < Map.size()){
+            nextKey+=1;
+        }
+        if (this->Map.find(nextKey) != this->Map.end()) {
             if (this->verificareAsemanare(key, nextKey)) {
                 if (this->newSets.find(key) != this->newSets.end()) {
                     this->newSets[nextKey] = this->newSets[key];
@@ -203,6 +225,7 @@ void Rezolvare::creareSeturi(){
         }
     }
 }
+// ---
 
 int main() {
     Rezolvare res;
@@ -210,70 +233,6 @@ int main() {
 
     return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//            int k = 0;
-//            for(auto [key2, value2] : this->Map[key]){
-//                if(this->sets[value2] == this->sets[Map[nextKey][key2]]) {
-//                    k+=1;
-//                } else {
-//                    if(this->newSets.size() == 0){
-//                        this->newSets[key] = 0;
-//                        this->newSets[nextKey] = 1;
-//                    } else {
-//                        for(auto [key3, value3] : this->newSets){
-//
-//                        }
-//                    }
-//                    break;
-//                }
-//            }  // cazul in care sunt egale pentru toate literele din alfabet
-
-
-
 
 
 
