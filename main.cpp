@@ -43,7 +43,7 @@ Rezolvare::Rezolvare(){
     this->stariFinale = {};
 }
 void Rezolvare::start(){
-    ifstream f("C:\\Users\\tiril\\CLionProjects\\LFATema2\\input3.txt");
+    ifstream f("C:\\Users\\tiril\\CLionProjects\\LFATema2\\input.txt");
     int numarLitere, stare;
     char litera;
     f>>numarStari;
@@ -233,63 +233,3 @@ int main() {
 
     return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//for(int i=0; i<sets.size(); i++) {
-//for (int j = 0; j < sets[i].size(); j++) {
-//if (newSets.size() == 0) {
-//newSets.push_back({sets[i][j]});
-//} else {
-//bool adaugat = 0;
-//for (int k = 0; k < newSets.size(); k++) {
-//if(newSets[k].size() > 0){
-//bool ok = 1;
-//for(auto& [key, value] : Map[sets[i][j]]){
-//if(Map[newSets[k][0]][key] == value) continue;
-//else {
-//// daca sunt diferite, atunci trebuie sa se afle in acelasi set din sets
-//for(int l=0; l<sets.size(); l++){
-//if((find(sets[l].begin(), sets[l].end(), Map[newSets[k][0]][key]) != sets[l].end() &&
-//find(sets[l].begin(), sets[l].end(), value) == sets[l].end()) ||
-//(find(sets[l].begin(), sets[l].end(), Map[newSets[k][0]][key]) == sets[l].end() &&
-//find(sets[l].begin(), sets[l].end(), value) != sets[l].end())) {
-//ok = 0;
-//break;
-//}
-//}
-//}
-//if(ok == 0) break;
-//}
-//if(ok == 1){
-//int q, p;
-//for(int m=0; m<sets.size(); m++){
-//for(int n=0; n<sets[m].size(); n++){
-//if(sets[m][n] == sets[i][j]) q = m;
-//if(sets[m][n] == newSets[k][0]) p = m;
-//}
-//}
-//if(q==p) {
-//newSets[k].push_back(sets[i][j]);
-//adaugat = 1;
-//break;
-//}
-//}
-//}
-//}
-//if(adaugat == 0) newSets.push_back({sets[i][j]});
-//}
-//}
-//}
-//return newSets;
